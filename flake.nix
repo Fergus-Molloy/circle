@@ -33,6 +33,12 @@
               nodePackages."vscode-langservers-extracted"
               nil
               nixpkgs-fmt
+              tailwindcss_4
+              esbuild
+              watchman
+              (pkgs.writeShellScriptBin "pg-connect" ''
+                ${pkgs.postgresql}/bin/psql postgresql://postgres:postgres@localhost:5432/circle_dev
+              '')
             ];
           };
         };
