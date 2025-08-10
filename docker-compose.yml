@@ -1,0 +1,22 @@
+services:
+  dev:
+    build: ./
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/circle_dev
+      SECRET_KEY_BASE: CRoatbu3tr6s4s3COaK/fQ4GPCfMfq46xnhJlCv5KaOE01sleiWfZsZ9AeOw0gBr
+    ports:
+      - 4000:4000
+      
+  db:
+    image: postgres:17-alpine
+    ports: 
+      - 5432:5432
+    environment: 
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-circle_dev}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
