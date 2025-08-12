@@ -1,0 +1,91 @@
+defmodule Circle.FeedTest do
+  use Circle.DataCase
+
+  alias Circle.Feed
+
+  describe "posts" do
+    alias Circle.Feed.Post
+
+    import Circle.AccountsFixtures, only: [user_scope_fixture: 0]
+    import Circle.FeedFixtures
+
+    @invalid_attrs %{content: nil}
+
+    test "list_posts/1 returns all scoped posts" do
+      scope = user_scope_fixture()
+      other_scope = user_scope_fixture()
+      post = post_fixture(scope)
+      other_post = post_fixture(other_scope)
+      assert Feed.list_posts(scope) == [post]
+      assert Feed.list_posts(other_scope) == [other_post]
+    end
+
+    test "get_post!/2 returns the post with given id" do
+      scope = user_scope_fixture()
+      post = post_fixture(scope)
+      other_scope = user_scope_fixture()
+      assert Feed.get_post!(scope, post.id) == post
+      assert_raise Ecto.NoResultsError, fn -> Feed.get_post!(other_scope, post.id) end
+    end
+
+    test "create_post/2 with valid data creates a post" do
+      valid_attrs = %{content: "some content"}
+      scope = user_scope_fixture()
+
+      assert {:ok, %Post{} = post} = Feed.create_post(scope, valid_attrs)
+      assert post.content == "some content"
+      assert post.user_id == scope.user.id
+    end
+
+    test "create_post/2 with invalid data returns error changeset" do
+      scope = user_scope_fixture()
+      assert {:error, %Ecto.Changeset{}} = Feed.create_post(scope, @invalid_attrs)
+    end
+
+    test "update_post/3 with valid data updates the post" do
+      scope = user_scope_fixture()
+      post = post_fixture(scope)
+      update_attrs = %{content: "some updated content"}
+
+      assert {:ok, %Post{} = post} = Feed.update_post(scope, post, update_attrs)
+      assert post.content == "some updated content"
+    end
+
+    test "update_post/3 with invalid scope raises" do
+      scope = user_scope_fixture()
+      other_scope = user_scope_fixture()
+      post = post_fixture(scope)
+
+      assert_raise MatchError, fn ->
+        Feed.update_post(other_scope, post, %{})
+      end
+    end
+
+    test "update_post/3 with invalid data returns error changeset" do
+      scope = user_scope_fixture()
+      post = post_fixture(scope)
+      assert {:error, %Ecto.Changeset{}} = Feed.update_post(scope, post, @invalid_attrs)
+      assert post == Feed.get_post!(scope, post.id)
+    end
+
+    test "delete_post/2 deletes the post" do
+      scope = user_scope_fixture()
+      post = post_fixture(scope)
+      assert {:ok, %Post{}} = Feed.delete_post(scope, post)
+      assert_raise Ecto.NoResultsError, fn -> Feed.get_post!(scope, post.id) end
+    end
+
+    test "delete_post/2 with invalid scope raises" do
+      scope = user_scope_fixture()
+      other_scope = user_scope_fixture()
+      post = post_fixture(scope)
+      assert_raise MatchError, fn -> Feed.delete_post(other_scope, post) end
+    end
+
+    test "change_post/2 returns a post changeset" do
+      scope = user_scope_fixture()
+      post = post_fixture(scope)
+      assert %Ecto.Changeset{} = Feed.change_post(scope, post)
+    end
+  end
+end
