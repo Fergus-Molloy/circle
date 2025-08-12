@@ -150,7 +150,7 @@ defmodule CircleWeb.CoreComponents do
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file month number password
-               search select tel text textarea time url week)
+               search select tel text textarea time url username week)
 
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
@@ -246,6 +246,33 @@ defmodule CircleWeb.CoreComponents do
     """
   end
 
+  def input(%{type: "username"} = assigns) do
+    ~H"""
+    <div class="fieldset mb-2">
+      <label>
+        <span :if={@label} class="label mb-1">{@label}</span>
+        <div class="input w-full">
+          <span class="m-auto text-gray-500">
+            @
+          </span>
+          <input
+            type={@type}
+            name={@name}
+            id={@id}
+            value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+            class={[
+              @class || "w-full",
+              @errors != [] && (@error_class || "input-error")
+            ]}
+            {@rest}
+          />
+        </div>
+      </label>
+      <.error :for={msg <- @errors}>{msg}</.error>
+    </div>
+    """
+  end
+
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
@@ -272,10 +299,12 @@ defmodule CircleWeb.CoreComponents do
   # Helper used by inputs to generate form errors
   defp error(assigns) do
     ~H"""
-    <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
+    <div class="mt-1.5 flex gap-2 items-left text-left text-sm text-error">
       <.icon name="hero-exclamation-circle" class="size-5" />
-      {render_slot(@inner_block)}
-    </p>
+      <div class="flex-1">
+        {render_slot(@inner_block)}
+      </div>
+    </div>
     """
   end
 

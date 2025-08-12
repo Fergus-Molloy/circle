@@ -31,7 +31,7 @@ defmodule CircleWeb.UserSessionController do
 
   # email + password login
   defp create(conn, %{"user" => user_params}, info) do
-    %{"email" => email, "password" => password} = user_params
+    %{"email" => email, "password" => password} = user_params |> IO.inspect(label: "user params")
 
     if user = Accounts.get_user_by_email_and_password(email, password) do
       conn

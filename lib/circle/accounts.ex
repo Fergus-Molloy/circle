@@ -8,7 +8,31 @@ defmodule Circle.Accounts do
 
   alias Circle.Accounts.{User, UserToken, UserNotifier}
 
+  defp prepend_symbol(%User{username: name} = user, symbol),
+    do: %{user | username: symbol <> name}
+
   ## Database getters
+  @doc """
+  Gets all users
+
+  ## Examples
+
+      iex> list_users(%{})
+      [%User{}]
+  """
+
+  def list_users(scope, opts \\ []) do
+    IO.inspect(scope, label: "scope")
+
+    users =
+      Repo.all(User)
+
+    if Keyword.get(opts, :with_at) != nil do
+      users |> Enum.map(&prepend_symbol(&1, "@"))
+    else
+      users
+    end
+  end
 
   @doc """
   Gets a user by email.
@@ -27,6 +51,29 @@ defmodule Circle.Accounts do
   end
 
   @doc """
+  Gets a user by username.
+  Will automatically strip leading @ if it exists
+
+  ## Examples
+
+      iex> get_user_by_username("@fergus")
+      %User{}
+
+      iex> get_user_by_username("fergus")
+      %User{}
+
+      iex> get_user_by_username("@asdf")
+      nil
+
+  """
+  def get_user_by_username(name) when is_binary(name) do
+    case name do
+      <<"@"::bitstring, name::bitstring>> -> Repo.get_by(User, username: name)
+      _ -> Repo.get_by(User, username: name)
+    end
+  end
+
+  @doc """
   Gets a user by email and password.
 
   ## Examples
@@ -40,7 +87,7 @@ defmodule Circle.Accounts do
   """
   def get_user_by_email_and_password(email, password)
       when is_binary(email) and is_binary(password) do
-    user = Repo.get_by(User, email: email)
+    user = Repo.get_by(User, email: email) |> IO.inspect(label: "found user")
     if User.valid_password?(user, password), do: user
   end
 
@@ -76,7 +123,7 @@ defmodule Circle.Accounts do
   """
   def register_user(attrs) do
     %User{}
-    |> User.email_changeset(attrs)
+    |> User.user_changeset(attrs)
     |> Repo.insert()
   end
 
@@ -109,6 +156,52 @@ defmodule Circle.Accounts do
   """
   def change_user_email(user, attrs \\ %{}, opts \\ []) do
     User.email_changeset(user, attrs, opts)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing a users username.
+
+  See `Circle.Accounts.User.username_changeset/3` for a list of supported options.
+
+  ## Examples
+
+      iex> change_user_username(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user_username(user, attrs \\ %{}, opts \\ []) do
+    User.username_changeset(user, attrs, opts)
+  end
+
+  @doc """
+  Updates a users username
+
+  ## Examples
+
+      iex> update_user_username(user, %{username: value})
+      {:ok, %User{}}
+
+      iex> update_user_username(user, %{username: bad_value})
+      {:error, %Ecto.Changeset{}}
+  """
+  def update_user_username(user, attrs \\ %{}) do
+    User.username_changeset(user, attrs, [])
+    |> Repo.update()
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user.
+
+  See `Circle.Accounts.User.user_changeset/3` for a list of supported options.
+
+  ## Examples
+
+      iex> change_user(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user(user, attrs \\ %{}, opts \\ []) do
+    User.user_changeset(user, attrs, opts)
   end
 
   @doc """

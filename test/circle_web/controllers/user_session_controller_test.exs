@@ -10,7 +10,7 @@ defmodule CircleWeb.UserSessionControllerTest do
 
   describe "POST /users/log-in - email and password" do
     test "logs the user in", %{conn: conn, user: user} do
-      user = set_password(user)
+      user = set_password(user) |> IO.inspect(label: "using user")
 
       conn =
         post(conn, ~p"/users/log-in", %{
@@ -21,7 +21,7 @@ defmodule CircleWeb.UserSessionControllerTest do
       assert redirected_to(conn) == ~p"/"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/")
+      conn = get(conn, ~p"/users")
       response = html_response(conn, 200)
       assert response =~ user.email
       assert response =~ ~p"/users/settings"
@@ -85,7 +85,7 @@ defmodule CircleWeb.UserSessionControllerTest do
       assert redirected_to(conn) == ~p"/"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/")
+      conn = get(conn, ~p"/users")
       response = html_response(conn, 200)
       assert response =~ user.email
       assert response =~ ~p"/users/settings"
@@ -109,7 +109,7 @@ defmodule CircleWeb.UserSessionControllerTest do
       assert Accounts.get_user!(user.id).confirmed_at
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/")
+      conn = get(conn, ~p"/users")
       response = html_response(conn, 200)
       assert response =~ user.email
       assert response =~ ~p"/users/settings"

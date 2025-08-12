@@ -27,6 +27,15 @@ defmodule CircleWeb.UserLive.Registration do
             field={@form[:email]}
             type="email"
             label="Email"
+            autocomplete="email"
+            required
+            phx-mounted={JS.focus()}
+          />
+
+          <.input
+            field={@form[:username]}
+            type="username"
+            label="Username"
             autocomplete="username"
             required
             phx-mounted={JS.focus()}
@@ -77,7 +86,9 @@ defmodule CircleWeb.UserLive.Registration do
   end
 
   def handle_event("validate", %{"user" => user_params}, socket) do
-    changeset = Accounts.change_user_email(%User{}, user_params, validate_unique: false)
+    changeset =
+      Accounts.change_user(%User{}, user_params, validate_unique: false)
+
     {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
   end
 

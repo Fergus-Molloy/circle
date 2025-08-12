@@ -6,6 +6,7 @@ defmodule Circle.Accounts.User do
   @foreign_key_type :binary_id
   schema "users" do
     field :email, :string
+    field :username, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
@@ -29,6 +30,72 @@ defmodule Circle.Accounts.User do
     user
     |> cast(attrs, [:email])
     |> validate_email(opts)
+  end
+
+  @doc """
+  A user changeset for registering or changing the username.
+
+  It requires the username to change otherwise an error is added.
+
+  ## Options
+
+    * `:validate_unique` - Set to false if you don't want to validate the
+      uniqueness of the email, useful when displaying live validations.
+      Defaults to `true`.
+  """
+  def username_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:username])
+    |> validate_username(opts)
+  end
+
+  @doc """
+  A user changeset for registering or changing the username and email.
+
+  It requires the username and email to change otherwise an error is added.
+
+  ## Options
+
+    * `:validate_unique` - Set to false if you don't want to validate the
+      uniqueness of the email, useful when displaying live validations.
+      Defaults to `true`.
+  """
+  def user_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:email, :username])
+    |> validate_email(opts)
+    |> validate_username(opts)
+  end
+
+  defp validate_username(changeset, opts) do
+    changeset =
+      changeset
+      |> validate_required([:username])
+      |> validate_format(:username, ~r/^[^\@].*$/, message: "username cannot start with @")
+      |> validate_format(:username, ~r/^[a-zA-Z0-9_]+$/,
+        message: "usernames must contain only alphanumeric characters or underscores"
+      )
+      |> validate_format(:username, ~r/[a-zA-Z0-9]/,
+        message: "username must contain at least 1 alphanumeric character"
+      )
+      |> validate_length(:username, max: 32, min: 3)
+
+    if Keyword.get(opts, :validate_unique, true) do
+      changeset
+      |> unsafe_validate_unique(:username, Circle.Repo)
+      |> unique_constraint(:username)
+      |> validate_username_changed()
+    else
+      changeset
+    end
+  end
+
+  defp validate_username_changed(changeset) do
+    if get_field(changeset, :username) && get_change(changeset, :username) == nil do
+      add_error(changeset, :username, "did not change")
+    else
+      changeset
+    end
   end
 
   defp validate_email(changeset, opts) do
