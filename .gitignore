@@ -37,5 +37,4 @@ npm-debug.log
 
 .elixir_ls/
 
-# ignore release directory
-rel/
+*.tar.xz

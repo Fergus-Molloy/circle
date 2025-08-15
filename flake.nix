@@ -23,6 +23,7 @@
         devShells = {
           default = mkShell {
             buildInputs = [
+              pv
               elixir
               elixir-ls
               libnotify

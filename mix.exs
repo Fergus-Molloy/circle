@@ -79,6 +79,7 @@ defmodule Circle.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
+      build_release: ["deps.get", "compile", "phx.gen.release", "assets.deploy", "release"],
       setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
