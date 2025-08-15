@@ -11,8 +11,23 @@ defmodule Circle.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
+    field :followed_by_current_user, :boolean, virtual: true
+
+    many_to_many :following, Circle.Accounts.User,
+      join_through: Circle.Accounts.UserFollowers,
+      join_keys: [user_id: :id, follows_id: :id]
+
+    many_to_many :followed_by, Circle.Accounts.User,
+      join_through: Circle.Accounts.UserFollowers,
+      join_keys: [follows_id: :id, user_id: :id]
 
     timestamps(type: :utc_datetime)
+  end
+
+  def follower_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:username, :email])
+    |> cast_assoc(:following)
   end
 
   @doc """
@@ -60,9 +75,10 @@ defmodule Circle.Accounts.User do
       uniqueness of the email, useful when displaying live validations.
       Defaults to `true`.
   """
-  def user_changeset(user, attrs, opts \\ []) do
+  def changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:email, :username])
+    |> cast_assoc(:following)
     |> validate_email(opts)
     |> validate_username(opts)
   end

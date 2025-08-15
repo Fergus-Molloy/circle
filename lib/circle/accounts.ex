@@ -4,9 +4,51 @@ defmodule Circle.Accounts do
   """
 
   import Ecto.Query, warn: false
+  require Logger
+  alias Ecto.Changeset
   alias Circle.Repo
 
   alias Circle.Accounts.{User, UserToken, UserNotifier}
+
+  defp apply_follow(user, to_follow) do
+    if Enum.any?(user.following, fn f -> f.id == to_follow.id end) do
+      Logger.info("User #{user.id} already follows #{to_follow.id}")
+      user
+    else
+      user
+      |> Changeset.change()
+      |> Changeset.put_assoc(:following, [to_follow | user.following])
+      |> Repo.update()
+    end
+  end
+
+  def follow_user(%User{} = user, %User{} = to_follow) do
+    user
+    |> Repo.preload(:following)
+    |> apply_follow(to_follow)
+  end
+
+  defp apply_unfollow(user, to_unfollow) do
+    if Enum.all?(user.following, fn f -> f.id != to_unfollow.id end) do
+      Logger.info("User #{user.id} does not follow #{to_unfollow.id}")
+      user
+    else
+      q =
+        from uf in Circle.Accounts.UserFollowers,
+          where: uf.user_id == ^user.id and uf.follows_id == ^to_unfollow.id
+
+      case Repo.delete_all(q) do
+        {1, nil} -> {:ok, to_unfollow}
+        e -> {:error, e}
+      end
+    end
+  end
+
+  def unfollow_user(%User{} = user, %User{} = to_unfollow) do
+    user
+    |> Repo.preload(:following)
+    |> apply_unfollow(to_unfollow)
+  end
 
   ## Database getters
   @doc """
@@ -17,13 +59,18 @@ defmodule Circle.Accounts do
       iex> list_users(%{})
       [%User{}]
   """
-  def list_users(scope, opts \\ []) do
-    with %User{username: _name} <- scope.user,
-         users <- Repo.all(User) do
-      maybe_prepend_symbol(users, "@", opts)
-    else
-      _ -> {:error, :not_signed_in}
-    end
+  def list_possible_follows_for_user(user, opts \\ []) do
+    follows_ids =
+      from f in Circle.Accounts.UserFollowers,
+        where: f.user_id == ^user.id,
+        select: [:follows_id]
+
+    Repo.all(
+      from u in User,
+        where: u.id != ^user.id,
+        select: %User{u | followed_by_current_user: u.id in subquery(follows_ids)}
+    )
+    |> maybe_prepend_symbol("@", opts)
   end
 
   @doc """
@@ -115,7 +162,7 @@ defmodule Circle.Accounts do
   """
   def register_user(attrs) do
     %User{}
-    |> User.user_changeset(attrs)
+    |> User.changeset(attrs)
     |> Repo.insert()
   end
 
@@ -184,7 +231,7 @@ defmodule Circle.Accounts do
   @doc """
   Returns an `%Ecto.Changeset{}` for changing the user.
 
-  See `Circle.Accounts.User.user_changeset/3` for a list of supported options.
+  See `Circle.Accounts.User.changeset/3` for a list of supported options.
 
   ## Examples
 
@@ -193,7 +240,7 @@ defmodule Circle.Accounts do
 
   """
   def change_user(user, attrs \\ %{}, opts \\ []) do
-    User.user_changeset(user, attrs, opts)
+    User.changeset(user, attrs, opts)
   end
 
   @doc """
