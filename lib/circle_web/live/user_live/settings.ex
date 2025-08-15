@@ -1,5 +1,4 @@
 defmodule CircleWeb.UserLive.Settings do
-  alias Circle.Repo
   use CircleWeb, :live_view
 
   on_mount {CircleWeb.UserAuth, :require_sudo_mode}
