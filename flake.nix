@@ -40,6 +40,15 @@
               (pkgs.writeShellScriptBin "pg-connect" ''
                 ${pkgs.postgresql}/bin/psql postgresql://postgres:postgres@localhost:5432/circle_dev
               '')
+              (pkgs.writeShellScriptBin "pre-commit" ''
+                ${pkgs.postgresql}/bin/pg_isready -h localhost -p 5432 | grep "accepting connections" -s > /dev/null
+                if [ "$?" -ne "0" ]; then
+                  echo "database is not ready, cannot run pre-commit hook"
+                  exit 1
+                fi
+
+                mix precommit
+              '')
             ];
           };
         };
