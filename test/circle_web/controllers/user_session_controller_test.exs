@@ -10,7 +10,7 @@ defmodule CircleWeb.UserSessionControllerTest do
 
   describe "POST /users/log-in - email and password" do
     test "logs the user in", %{conn: conn, user: user} do
-      user = set_password(user) |> IO.inspect(label: "using user")
+      user = set_password(user)
 
       conn =
         post(conn, ~p"/users/log-in", %{

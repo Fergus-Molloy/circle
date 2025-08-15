@@ -8,29 +8,21 @@ defmodule Circle.Accounts do
 
   alias Circle.Accounts.{User, UserToken, UserNotifier}
 
-  defp prepend_symbol(%User{username: name} = user, symbol),
-    do: %{user | username: symbol <> name}
-
   ## Database getters
   @doc """
-  Gets all users
+  Gets all users, user must be signed in to see this
 
   ## Examples
 
       iex> list_users(%{})
       [%User{}]
   """
-
   def list_users(scope, opts \\ []) do
-    IO.inspect(scope, label: "scope")
-
-    users =
-      Repo.all(User)
-
-    if Keyword.get(opts, :with_at) != nil do
-      users |> Enum.map(&prepend_symbol(&1, "@"))
+    with %User{username: _name} <- scope.user,
+         users <- Repo.all(User) do
+      maybe_prepend_symbol(users, "@", opts)
     else
-      users
+      _ -> {:error, :not_signed_in}
     end
   end
 
@@ -387,4 +379,15 @@ defmodule Circle.Accounts do
       end
     end)
   end
+
+  defp maybe_prepend_symbol(users, symbol, opts) do
+    if Keyword.get(opts, :with_at) do
+      Enum.map(users, &prepend_symbol(&1, symbol))
+    else
+      users
+    end
+  end
+
+  defp prepend_symbol(%User{username: name} = user, symbol),
+    do: %{user | username: symbol <> name}
 end
