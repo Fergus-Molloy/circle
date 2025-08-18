@@ -95,7 +95,7 @@ defmodule Circle.MixProject do
         "compile --warning-as-errors",
         "deps.unlock --unused",
         "format",
-        "test --color"
+        "test"
       ]
     ]
   end

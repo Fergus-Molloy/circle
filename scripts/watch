@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+watchexec \
+	--wrap-process=none \
+	--restart \
+	--watch test \
+	--watch lib \
+	--watch assets \
+	$@
+
