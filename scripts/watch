@@ -6,5 +6,6 @@ watchexec \
 	--watch test \
 	--watch lib \
 	--watch assets \
+	--delay-run 5s \
 	$@
 

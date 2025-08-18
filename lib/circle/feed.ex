@@ -107,7 +107,7 @@ defmodule Circle.Feed do
 
   """
   def update_post(%Scope{} = scope, %Post{} = post, attrs) do
-    true = post.user_id == scope.user.id
+    true = Circle.Accounts.Scope.can?(scope, :edit, post)
 
     with {:ok, post = %Post{}} <-
            post
@@ -131,7 +131,7 @@ defmodule Circle.Feed do
 
   """
   def delete_post(%Scope{} = scope, %Post{} = post) do
-    true = post.user_id == scope.user.id
+    true = Circle.Accounts.Scope.can?(scope, :delete, post)
 
     with {:ok, post = %Post{}} <-
            Repo.delete(post) do
@@ -150,7 +150,7 @@ defmodule Circle.Feed do
 
   """
   def change_post(%Scope{} = scope, %Post{} = post, attrs \\ %{}) do
-    true = post.user_id == scope.user.id
+    true = Circle.Accounts.Scope.can?(scope, :edit, post)
 
     Post.changeset(post, attrs, scope)
   end

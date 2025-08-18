@@ -10,6 +10,7 @@ defmodule Circle.Accounts.User do
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
+    field :is_admin, :boolean
     field :authenticated_at, :utc_datetime, virtual: true
     field :followed_by_current_user, :boolean, virtual: true
 

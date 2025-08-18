@@ -14,7 +14,7 @@ defmodule CircleWeb.PostLive.Show do
           <.button navigate={~p"/posts"}>
             <.icon name="hero-arrow-left" />
           </.button>
-          <%= if @post.user_id == @current_scope.user.id do %>
+          <%= if Circle.Accounts.Scope.can?(@current_scope, :edit, @post) do %>
             <.button variant="primary" navigate={~p"/posts/#{@post}/edit?return_to=show"}>
               <.icon name="hero-pencil-square" /> Edit post
             </.button>

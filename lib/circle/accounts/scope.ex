@@ -17,17 +17,37 @@ defmodule Circle.Accounts.Scope do
   """
 
   alias Circle.Accounts.User
+  alias Circle.Feed.Post
 
-  defstruct user: nil
+  defstruct user: nil, role: nil
 
   @doc """
   Creates a scope for the given user.
 
   Returns nil if no user is given.
   """
+  def for_user(%User{is_admin: true} = user) do
+    %__MODULE__{user: user, role: :admin}
+  end
+
   def for_user(%User{} = user) do
-    %__MODULE__{user: user}
+    %__MODULE__{user: user, role: :user}
   end
 
   def for_user(nil), do: nil
+
+  @doc """
+  Check if current scope can perform the given action on the given item
+
+  Returns true if user can perform action, false otherwise
+  """
+  def can?(scope, action, item) do
+    case get_policy_for(item) |> apply([scope, action, item]) do
+      :ok -> true
+      _ -> false
+    end
+  end
+
+  defp get_policy_for(%Post{}), do: &Circle.Accounts.Policy.PostPolicy.can/3
+  defp get_policy_for(%{}), do: fn _, _, _ -> raise "policy not defined" end
 end

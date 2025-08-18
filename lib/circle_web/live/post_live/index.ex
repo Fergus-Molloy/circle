@@ -2,6 +2,7 @@ defmodule CircleWeb.PostLive.Index do
   use CircleWeb, :live_view
 
   alias Circle.Feed
+  alias Circle.Accounts.Scope
 
   @impl true
   def render(assigns) do
@@ -26,12 +27,12 @@ defmodule CircleWeb.PostLive.Index do
           <div class="sr-only">
             <.link navigate={~p"/posts/#{post}"}>Show</.link>
           </div>
-          <%= if post.user_id == @current_scope.user.id do %>
+          <%= if Scope.can?(@current_scope, :edit, post) do %>
             <.link navigate={~p"/posts/#{post}/edit"}>Edit</.link>
           <% end %>
         </:action>
         <:action :let={{id, post}}>
-          <%= if post.user_id == @current_scope.user.id do %>
+          <%= if Scope.can?(@current_scope, :delete, post) do %>
             <.link
               phx-click={JS.push("delete", value: %{id: post.id}) |> hide("##{id}")}
               data-confirm="Are you sure?"
