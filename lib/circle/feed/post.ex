@@ -6,7 +6,7 @@ defmodule Circle.Feed.Post do
   @foreign_key_type :binary_id
   schema "posts" do
     field :content, :string
-    field :user_id, :binary_id
+    belongs_to :user, Circle.Accounts.User
 
     timestamps(type: :utc_datetime)
   end

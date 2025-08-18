@@ -6,7 +6,7 @@ defmodule Circle.FeedTest do
   describe "posts" do
     alias Circle.Feed.Post
 
-    import Circle.AccountsFixtures, only: [user_scope_fixture: 0]
+    import Circle.AccountsFixtures
     import Circle.FeedFixtures
 
     @invalid_attrs %{content: nil}
@@ -20,12 +20,22 @@ defmodule Circle.FeedTest do
       assert Feed.list_posts(other_scope) == [other_post]
     end
 
+    test "list_posts/1 returns followers posts" do
+      u1 = user_fixture()
+      scope = user_scope_fixture(u1)
+      u2 = user_fixture()
+      post1 = post_fixture(user_scope_fixture(u2))
+      post2 = post_fixture(scope)
+
+      Circle.Accounts.follow_user(u1, u2)
+
+      assert Feed.list_posts(scope) == [post1, post2]
+    end
+
     test "get_post!/2 returns the post with given id" do
       scope = user_scope_fixture()
       post = post_fixture(scope)
-      other_scope = user_scope_fixture()
       assert Feed.get_post!(scope, post.id) == post
-      assert_raise Ecto.NoResultsError, fn -> Feed.get_post!(other_scope, post.id) end
     end
 
     test "create_post/2 with valid data creates a post" do

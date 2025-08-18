@@ -4,6 +4,7 @@ defmodule Circle.Feed do
   """
 
   import Ecto.Query, warn: false
+  alias Circle.Accounts.UserFollowers
   alias Circle.Repo
 
   alias Circle.Feed.Post
@@ -40,8 +41,17 @@ defmodule Circle.Feed do
       [%Post{}, ...]
 
   """
-  def list_posts(%Scope{} = scope) do
-    Repo.all_by(Post, user_id: scope.user.id)
+  def list_posts(%Scope{user: user}) do
+    follower_ids =
+      from followers in UserFollowers,
+        where: followers.user_id == ^user.id,
+        select: followers.follows_id
+
+    Repo.all(
+      from p in Post,
+        where: p.user_id == ^user.id or p.user_id in subquery(follower_ids),
+        order_by: [desc: p.inserted_at]
+    )
   end
 
   @doc """
@@ -58,8 +68,8 @@ defmodule Circle.Feed do
       ** (Ecto.NoResultsError)
 
   """
-  def get_post!(%Scope{} = scope, id) do
-    Repo.get_by!(Post, id: id, user_id: scope.user.id)
+  def get_post!(%Scope{} = _scope, id) do
+    Repo.get_by!(Post, id: id)
   end
 
   @doc """

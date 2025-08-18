@@ -55,6 +55,11 @@ defmodule CircleWeb.Router do
       live "/users", UserLive.Index, :index
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+
+      live "/posts", PostLive.Index, :index
+      live "/posts/new", PostLive.Form, :new
+      live "/posts/:id", PostLive.Show, :show
+      live "/posts/:id/edit", PostLive.Form, :edit
     end
 
     post "/users/update-password", UserSessionController, :update_password
@@ -68,11 +73,6 @@ defmodule CircleWeb.Router do
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new
-
-      live "/posts", PostLive.Index, :index
-      live "/posts/new", PostLive.Form, :new
-      live "/posts/:id", PostLive.Show, :show
-      live "/posts/:id/edit", PostLive.Form, :edit
     end
 
     post "/users/log-in", UserSessionController, :create

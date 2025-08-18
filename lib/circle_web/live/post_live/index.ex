@@ -26,15 +26,19 @@ defmodule CircleWeb.PostLive.Index do
           <div class="sr-only">
             <.link navigate={~p"/posts/#{post}"}>Show</.link>
           </div>
-          <.link navigate={~p"/posts/#{post}/edit"}>Edit</.link>
+          <%= if post.user_id == @current_scope.user.id do %>
+            <.link navigate={~p"/posts/#{post}/edit"}>Edit</.link>
+          <% end %>
         </:action>
         <:action :let={{id, post}}>
-          <.link
-            phx-click={JS.push("delete", value: %{id: post.id}) |> hide("##{id}")}
-            data-confirm="Are you sure?"
-          >
-            Delete
-          </.link>
+          <%= if post.user_id == @current_scope.user.id do %>
+            <.link
+              phx-click={JS.push("delete", value: %{id: post.id}) |> hide("##{id}")}
+              data-confirm="Are you sure?"
+            >
+              Delete
+            </.link>
+          <% end %>
         </:action>
       </.table>
     </Layouts.app>

@@ -13,6 +13,8 @@ defmodule Circle.Accounts.User do
     field :authenticated_at, :utc_datetime, virtual: true
     field :followed_by_current_user, :boolean, virtual: true
 
+    has_many :posts, Circle.Feed.Post
+
     many_to_many :following, Circle.Accounts.User,
       join_through: Circle.Accounts.UserFollowers,
       join_keys: [user_id: :id, follows_id: :id]

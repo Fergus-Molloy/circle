@@ -32,7 +32,8 @@ defmodule Circle.AccountsFixtures do
     user
   end
 
-  def user_fixture(attrs \\ %{}) do
+  def user_fixture(opts \\ []) do
+    attrs = Keyword.get(opts, :attrs, %{})
     user = unconfirmed_user_fixture(attrs)
 
     token =

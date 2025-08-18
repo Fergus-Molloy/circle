@@ -41,8 +41,8 @@ defmodule CircleWeb.UserLive.IndexTest do
       assert html =~ u.username
     end
 
-    test "can follow a user", %{conn: conn, users: [u1, u2 | _]} do
-      {:ok, view, html} =
+    test "can follow a user", %{conn: conn, users: [u1 | _]} do
+      {:ok, view, _html} =
         conn
         |> log_in_user(user_fixture())
         |> live(~p"/users")
