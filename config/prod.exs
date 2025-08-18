@@ -13,6 +13,9 @@ config :swoosh, api_client: Swoosh.ApiClient.Req
 # Disable Swoosh Local Memory Storage
 config :swoosh, local: false
 
+# Enable extra monitoring
+config :circle, os_mon: true
+
 # Do not print debug messages in production
 config :logger, level: :info
 

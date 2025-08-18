@@ -21,7 +21,7 @@ defmodule Circle.MixProject do
   def application do
     [
       mod: {Circle.Application, []},
-      extra_applications: [:logger, :runtime_tools, :os_mon]
+      extra_applications: [:logger, :runtime_tools, os_mon: :optional]
     ]
   end
 
@@ -91,7 +91,12 @@ defmodule Circle.MixProject do
         "esbuild circle --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "compile --warning-as-errors",
+        "deps.unlock --unused",
+        "format",
+        "test --color"
+      ]
     ]
   end
 end

@@ -18,6 +18,13 @@ defmodule Circle.Application do
       CircleWeb.Endpoint
     ]
 
+    # only start :os_mon in production
+    if Application.get_env(:circle, :os_mon, false) do
+      Application.ensure_started(:os_mon)
+    else
+      Application.stop(:os_mon)
+    end
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Circle.Supervisor]
