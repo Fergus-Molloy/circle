@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-watchexec \
-	--wrap-process=none \
+exec watchexec \
+	--wrap-process=session \
 	--restart \
 	--watch test \
 	--watch lib \
 	--watch assets \
-	--delay-run 5s \
 	$@
 
