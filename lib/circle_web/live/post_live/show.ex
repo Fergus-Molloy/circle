@@ -15,8 +15,20 @@ defmodule CircleWeb.PostLive.Show do
             <.icon name="hero-arrow-left" />
           </.button>
           <%= if Circle.Accounts.Scope.can?(@current_scope, :edit, @post) do %>
-            <.button variant="primary" navigate={~p"/posts/#{@post}/edit?return_to=show"}>
+            <.button
+              class="btn btn-primary btn-ghost"
+              navigate={~p"/posts/#{@post}/edit?return_to=show"}
+            >
               <.icon name="hero-pencil-square" /> Edit post
+            </.button>
+          <% end %>
+          <%= if Circle.Accounts.Scope.can?(@current_scope, :delete, @post) do %>
+            <.button
+              class="btn btn-error btn-ghost"
+              phx-click={JS.push("delete", value: %{id: @post.id}) |> hide("##{@post.id}")}
+              data-confirm="Are you sure?"
+            >
+              <.icon name="hero-trash" /> Delete
             </.button>
           <% end %>
         </:actions>
@@ -50,6 +62,19 @@ defmodule CircleWeb.PostLive.Show do
   end
 
   def handle_info(
+        {:deleted, %Circle.Feed.Post{id: id}} = info,
+        socket
+      ) do
+    Logger.info("Post #{id} deleted")
+    handle_deleted(info, socket)
+  end
+
+  def handle_info({type, %Circle.Feed.Post{}}, socket)
+      when type in [:created, :updated, :deleted] do
+    {:noreply, socket}
+  end
+
+  def handle_deleted(
         {:deleted, %Circle.Feed.Post{id: id}},
         %{assigns: %{post: %{id: id}}} = socket
       ) do
@@ -59,8 +84,11 @@ defmodule CircleWeb.PostLive.Show do
      |> push_navigate(to: ~p"/posts")}
   end
 
-  def handle_info({type, %Circle.Feed.Post{}}, socket)
-      when type in [:created, :updated, :deleted] do
+  @impl true
+  def handle_event("delete", %{"id" => id}, socket) do
+    post = Feed.get_post!(socket.assigns.current_scope, id)
+    {:ok, _} = Feed.delete_post(socket.assigns.current_scope, post)
+
     {:noreply, socket}
   end
 end

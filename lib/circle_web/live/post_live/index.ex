@@ -1,5 +1,6 @@
 defmodule CircleWeb.PostLive.Index do
   use CircleWeb, :live_view
+  import CircleWeb.Components.Post
 
   alias Circle.Feed
   alias Circle.Accounts.Scope
@@ -16,6 +17,11 @@ defmodule CircleWeb.PostLive.Index do
           </.button>
         </:actions>
       </.header>
+      <div class="flex flex-col divide-solid divide-y-1 divide-neutral">
+        <%= for {_id, post} <- @streams.posts do %>
+          <.post post={post} />
+        <% end %>
+      </div>
 
       <.table
         id="posts"
@@ -67,8 +73,13 @@ defmodule CircleWeb.PostLive.Index do
   end
 
   @impl true
-  def handle_info({type, %Circle.Feed.Post{}}, socket)
-      when type in [:created, :updated, :deleted] do
-    {:noreply, stream(socket, :posts, Feed.list_posts(socket.assigns.current_scope), reset: true)}
+  def handle_info({:deleted, %Circle.Feed.Post{} = post}, socket) do
+    {:noreply, stream_delete(socket, :posts, post)}
+  end
+
+  @impl true
+  def handle_info({type, %Circle.Feed.Post{} = post}, socket)
+      when type in [:created, :updated] do
+    {:noreply, stream_insert(socket, :posts, post)}
   end
 end

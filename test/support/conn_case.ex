@@ -14,6 +14,7 @@ defmodule CircleWeb.ConnCase do
   by setting `use CircleWeb.ConnCase, async: true`, although
   this option is not recommended for other databases.
   """
+  alias Circle.Repo
 
   use ExUnit.CaseTemplate
 
@@ -46,6 +47,16 @@ defmodule CircleWeb.ConnCase do
   """
   def register_and_log_in_user(%{conn: conn} = context) do
     user = Circle.AccountsFixtures.user_fixture()
+    following = Circle.AccountsFixtures.user_fixture()
+    Circle.Accounts.follow_user(user, following)
+
+    {:ok, following_post} =
+      Circle.Feed.create_post(%Circle.Accounts.Scope{user: following}, %{
+        "content" => "some following content"
+      })
+
+    user = Repo.preload(user, [:following])
+
     scope = Circle.Accounts.Scope.for_user(user)
 
     opts =
@@ -53,7 +64,12 @@ defmodule CircleWeb.ConnCase do
       |> Map.take([:token_authenticated_at])
       |> Enum.into([])
 
-    %{conn: log_in_user(conn, user, opts), user: user, scope: scope}
+    %{
+      conn: log_in_user(conn, user, opts),
+      user: user,
+      scope: scope,
+      following_post: following_post
+    }
   end
 
   @doc """

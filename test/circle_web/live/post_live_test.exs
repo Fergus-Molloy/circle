@@ -3,6 +3,7 @@ defmodule CircleWeb.PostLiveTest do
 
   import Phoenix.LiveViewTest
   import Circle.FeedFixtures
+  import Circle.AccountsFixtures
 
   @create_attrs %{content: "some content"}
   @update_attrs %{content: "some updated content"}
@@ -83,6 +84,67 @@ defmodule CircleWeb.PostLiveTest do
 
       assert index_live |> element("#posts-#{post.id} a", "Delete") |> render_click()
       refute has_element?(index_live, "#posts-#{post.id}")
+    end
+
+    test "adds following post to listing", %{conn: conn} do
+      # setup
+      user1 = user_fixture()
+      user2 = user_fixture()
+      scope2 = user_scope_fixture(user2)
+
+      Circle.Accounts.follow_user(user1, user2)
+
+      conn1 = log_in_user(conn, user1)
+      {:ok, index_live, html} = live(conn1, ~p"/posts")
+
+      # act
+      refute html =~ "Hello followers!"
+
+      {:ok, _} = Circle.Feed.create_post(scope2, %{content: "Hello followers!"})
+
+      assert render(index_live) =~ "Hello followers!"
+    end
+
+    test "updates following post to listing", %{conn: conn} do
+      # setup
+      user1 = user_fixture()
+      user2 = user_fixture()
+      scope2 = user_scope_fixture(user2)
+
+      Circle.Accounts.follow_user(user1, user2)
+
+      {:ok, f_post} = Circle.Feed.create_post(scope2, %{content: "Hello followers!"})
+
+      conn1 = log_in_user(conn, user1)
+      {:ok, index_live, html} = live(conn1, ~p"/posts")
+
+      # act
+      assert html =~ "Hello followers!"
+
+      {:ok, _} = Circle.Feed.update_post(scope2, f_post, %{content: "Hello to all my followers!"})
+
+      assert render(index_live) =~ "Hello to all my followers!"
+    end
+
+    test "deletes following post to listing", %{conn: conn} do
+      # setup
+      user1 = user_fixture()
+      user2 = user_fixture()
+      scope2 = user_scope_fixture(user2)
+
+      Circle.Accounts.follow_user(user1, user2)
+
+      {:ok, f_post} = Circle.Feed.create_post(scope2, %{content: "Hello followers!"})
+
+      conn1 = log_in_user(conn, user1)
+      {:ok, index_live, html} = live(conn1, ~p"/posts")
+
+      # act
+      assert html =~ "Hello followers!"
+
+      {:ok, _} = Circle.Feed.delete_post(scope2, f_post)
+
+      refute render(index_live) =~ "Hello followers!"
     end
   end
 

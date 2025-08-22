@@ -4,6 +4,8 @@ defmodule Circle.Feed do
   """
 
   import Ecto.Query, warn: false
+  require Logger
+  alias Circle.Accounts
   alias Circle.Accounts.UserFollowers
   alias Circle.Repo
 
@@ -21,15 +23,17 @@ defmodule Circle.Feed do
 
   """
   def subscribe_posts(%Scope{} = scope) do
-    key = scope.user.id
+    topics =
+      [scope.user.id | Accounts.get_following_ids_for(scope.user)]
+      |> Enum.map(fn key -> "user:#{key}:posts" end)
 
-    Phoenix.PubSub.subscribe(Circle.PubSub, "user:#{key}:posts")
+    Logger.debug("Subscribing to topics #{Enum.join(topics, ", ")}")
+
+    for topic <- topics, do: Phoenix.PubSub.subscribe(Circle.PubSub, topic)
   end
 
-  defp broadcast(%Scope{} = scope, message) do
-    key = scope.user.id
-
-    Phoenix.PubSub.broadcast(Circle.PubSub, "user:#{key}:posts", message)
+  defp broadcast(id, message) when is_binary(id) do
+    Phoenix.PubSub.broadcast(Circle.PubSub, "user:#{id}:posts", message)
   end
 
   @doc """
@@ -50,8 +54,10 @@ defmodule Circle.Feed do
     Repo.all(
       from p in Post,
         where: p.user_id == ^user.id or p.user_id in subquery(follower_ids),
-        order_by: [desc: p.inserted_at]
+        order_by: [desc: p.inserted_at],
+        preload: [:user]
     )
+    |> Enum.map(fn p -> %{p | user: Accounts.User.prepend_symbol(p.user)} end)
   end
 
   @doc """
@@ -89,7 +95,7 @@ defmodule Circle.Feed do
            %Post{}
            |> Post.changeset(attrs, scope)
            |> Repo.insert() do
-      broadcast(scope, {:created, post})
+      broadcast(post.user_id, {:created, post})
       {:ok, post}
     end
   end
@@ -113,7 +119,7 @@ defmodule Circle.Feed do
            post
            |> Post.changeset(attrs, scope)
            |> Repo.update() do
-      broadcast(scope, {:updated, post})
+      broadcast(post.user_id, {:updated, post})
       {:ok, post}
     end
   end
@@ -135,7 +141,7 @@ defmodule Circle.Feed do
 
     with {:ok, post = %Post{}} <-
            Repo.delete(post) do
-      broadcast(scope, {:deleted, post})
+      broadcast(post.user_id, {:deleted, post})
       {:ok, post}
     end
   end

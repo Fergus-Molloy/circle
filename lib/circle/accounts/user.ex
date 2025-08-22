@@ -215,4 +215,16 @@ defmodule Circle.Accounts.User do
     Argon2.no_user_verify()
     false
   end
+
+  @spec maybe_prepend_symbol(list(%{}), keyword()) :: list(%{})
+  def maybe_prepend_symbol(users, opts) do
+    if Keyword.get(opts, :with_at) do
+      Enum.map(users, &prepend_symbol/1)
+    else
+      users
+    end
+  end
+
+  def prepend_symbol(%{username: name} = user),
+    do: %{user | username: "@" <> name}
 end

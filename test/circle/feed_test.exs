@@ -14,8 +14,10 @@ defmodule Circle.FeedTest do
     test "list_posts/1 returns all scoped posts" do
       scope = user_scope_fixture()
       other_scope = user_scope_fixture()
-      post = post_fixture(scope)
-      other_post = post_fixture(other_scope)
+      post = post_fixture(scope) |> Circle.Repo.preload([:user])
+      post = %{post | user: Circle.Accounts.User.prepend_symbol(post.user)}
+      other_post = post_fixture(other_scope) |> Circle.Repo.preload([:user])
+      other_post = %{other_post | user: Circle.Accounts.User.prepend_symbol(other_post.user)}
       assert Feed.list_posts(scope) == [post]
       assert Feed.list_posts(other_scope) == [other_post]
     end
@@ -24,8 +26,10 @@ defmodule Circle.FeedTest do
       u1 = user_fixture()
       scope = user_scope_fixture(u1)
       u2 = user_fixture()
-      post1 = post_fixture(user_scope_fixture(u2))
-      post2 = post_fixture(scope)
+      post1 = post_fixture(user_scope_fixture(u2)) |> Circle.Repo.preload([:user])
+      post1 = %{post1 | user: Circle.Accounts.User.prepend_symbol(post1.user)}
+      post2 = post_fixture(scope) |> Circle.Repo.preload([:user])
+      post2 = %{post2 | user: Circle.Accounts.User.prepend_symbol(post2.user)}
 
       Circle.Accounts.follow_user(u1, u2)
 

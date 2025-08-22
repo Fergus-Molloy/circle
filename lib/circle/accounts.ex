@@ -5,6 +5,7 @@ defmodule Circle.Accounts do
 
   import Ecto.Query, warn: false
   require Logger
+  alias Circle.Accounts.UserFollowers
   alias Ecto.Changeset
   alias Circle.Repo
 
@@ -70,7 +71,7 @@ defmodule Circle.Accounts do
         where: u.id != ^user.id,
         select: %User{u | followed_by_current_user: u.id in subquery(follows_ids)}
     )
-    |> maybe_prepend_symbol("@", opts)
+    |> User.maybe_prepend_symbol(opts)
   end
 
   @doc """
@@ -427,14 +428,11 @@ defmodule Circle.Accounts do
     end)
   end
 
-  defp maybe_prepend_symbol(users, symbol, opts) do
-    if Keyword.get(opts, :with_at) do
-      Enum.map(users, &prepend_symbol(&1, symbol))
-    else
-      users
-    end
+  def get_following_ids_for(%User{id: id}) do
+    Repo.all(
+      from u in UserFollowers,
+        where: ^id == u.user_id,
+        select: u.follows_id
+    )
   end
-
-  defp prepend_symbol(%User{username: name} = user, symbol),
-    do: %{user | username: symbol <> name}
 end
