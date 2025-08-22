@@ -1,6 +1,7 @@
 defmodule CircleWeb.PostLive.Show do
   use CircleWeb, :live_view
 
+  require Logger
   alias Circle.Feed
 
   @impl true
@@ -62,19 +63,6 @@ defmodule CircleWeb.PostLive.Show do
   end
 
   def handle_info(
-        {:deleted, %Circle.Feed.Post{id: id}} = info,
-        socket
-      ) do
-    Logger.info("Post #{id} deleted")
-    handle_deleted(info, socket)
-  end
-
-  def handle_info({type, %Circle.Feed.Post{}}, socket)
-      when type in [:created, :updated, :deleted] do
-    {:noreply, socket}
-  end
-
-  def handle_deleted(
         {:deleted, %Circle.Feed.Post{id: id}},
         %{assigns: %{post: %{id: id}}} = socket
       ) do
@@ -82,6 +70,11 @@ defmodule CircleWeb.PostLive.Show do
      socket
      |> put_flash(:error, "The current post was deleted.")
      |> push_navigate(to: ~p"/posts")}
+  end
+
+  def handle_info({type, %Circle.Feed.Post{}}, socket)
+      when type in [:created, :updated, :deleted] do
+    {:noreply, socket}
   end
 
   @impl true

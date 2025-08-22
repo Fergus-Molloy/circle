@@ -141,6 +141,7 @@ defmodule Circle.Feed do
 
     with {:ok, post = %Post{}} <-
            Repo.delete(post) do
+      Logger.info("Post #{post.id} deleted by #{scope.user.id}")
       broadcast(post.user_id, {:deleted, post})
       {:ok, post}
     end
